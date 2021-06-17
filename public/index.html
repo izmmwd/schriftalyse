@@ -51,28 +51,30 @@
     </div>
 
     <script type="text/x-template" id="analysis-component-template">
-      <div class="card">
-        <div class="card-content">
-          <div class="media">
-            <div class="media-left">
-              <figure class="image is-48x48">
-          <img :src="'https://api.faviconkit.com/' + host" alt="">
-              </figure>
+        <div class="card">
+          <div class="card-content">
+            <div class="media">
+              <div class="media-left">
+                <figure class="image is-48x48">
+            <img :src="'https://api.faviconkit.com/' + host" alt="">
+                </figure>
+              </div>
+              <div class="media-content">
+            <p class="title is-4">{{ modelValue }}</p>
+              </div>
             </div>
-            <div class="media-content">
-          <p class="title is-4">{{ modelValue }}</p>
-            </div>
-          </div>
 
-          <div class="content">
-         <template v-if="loading">
-          <i class="fa fa-spinner fa-spin"></i>
-          am Arbeiten ..
-          </template>
-            <pre v-else>{{ result }}</pre>
+            <div class="content">
+              <template v-if="loading">
+                <i class="fa fa-spinner fa-spin"></i> am Arbeiten ..
+              </template>
+              <template v-if="result == false">
+                <p class="has-text-danger">Bummer! Diese Seite konnten wir nicht analysieren.</p>
+              </template>
+              <pre v-if="result">{{ result }}</pre>
+            </div>
           </div>
         </div>
-          </div>
     </script>
 
     <script src="https://unpkg.com/vue@3.0.11/dist/vue.global.prod.js"></script>
@@ -86,19 +88,24 @@
         data() {
           return {
             loading: false,
-            result: [],
+            result: null,
             host: null,
           };
         },
         async mounted() {
           this.host = new URL(this.modelValue).hostname;
           this.loading = true;
-          const response = await axios.get(
-            "https://cssstats.com/api/stats?" +
-              Qs.stringify({ url: this.modelValue })
-          );
-          this.result =
-            response.data.stats.declarations.properties["font-family"];
+          try {
+            const response = await axios.get(
+              "https://cssstats.com/api/stats?" +
+                Qs.stringify({ url: this.modelValue })
+            );
+            this.result =
+              response.data.stats.declarations.properties["font-family"];
+          } catch (err) {
+            console.error(err);
+            this.result = false;
+          }
           this.loading = false;
         },
       };
