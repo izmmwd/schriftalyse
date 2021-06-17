@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+
+  web:
+    image: caddy:2.4.0-alpine
+    volumes:
+      - ./public:/usr/share/caddy
+    ports:
+      - 127.0.0.1:5400:80
+
+  prettier:
+    image: tmknom/prettier:2.0.4
+    working_dir: /app
+    volumes:
+      - ./:/app

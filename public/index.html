@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/bulma@0.9.2/css/bulma.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@fortawesome/fontawesome-free@5.15.3/css/all.min.css"
+    />
+
+    <title>Schriftalyse</title>
+  </head>
+  <body style="padding: 1rem;">
+    <div id="app">
+      <div class="container">
+        <h1 class="title">Schriftalyse</h1>
+        <analysis-component
+          v-model="url"
+          v-for="url in urls"
+        ></analysis-component>
+
+        <form @submit.prevent="analyse" class="box">
+          <div class="field">
+            <div class="control">
+              <input
+                class="input"
+                type="text"
+                placeholder="URL to analyse"
+                v-model="rawUrl"
+              />
+            </div>
+          </div>
+
+          <div class="field is-grouped">
+            <div class="control">
+              <button
+                type="submit"
+                class="button is-primary"
+                :disabled="!isRawUrlValid"
+              >
+                Analyse
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="text/x-template" id="analysis-component-template">
+      <div class="card">
+        <div class="card-content">
+          <div class="media">
+            <div class="media-left">
+              <figure class="image is-48x48">
+          <img :src="'https://api.faviconkit.com/' + host" alt="">
+              </figure>
+            </div>
+            <div class="media-content">
+          <p class="title is-4">{{ modelValue }}</p>
+            </div>
+          </div>
+
+          <div class="content">
+         <template v-if="loading">
+          <i class="fa fa-spinner fa-spin"></i>
+          am Arbeiten ..
+          </template>
+            <pre v-else>{{ result }}</pre>
+          </div>
+        </div>
+          </div>
+    </script>
+
+    <script src="https://unpkg.com/vue@3.0.11/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/axios@0.21.1/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/qs@6.10.1/dist/qs.js"></script>
+
+    <script>
+      const AnalysisComponent = {
+        template: "#analysis-component-template",
+        props: ["modelValue"],
+        data() {
+          return {
+            loading: false,
+            result: [],
+            host: null,
+          };
+        },
+        async mounted() {
+          this.host = new URL(this.modelValue).hostname;
+          this.loading = true;
+          const response = await axios.get(
+            "https://cssstats.com/api/stats?" +
+              Qs.stringify({ url: this.modelValue })
+          );
+          this.result =
+            response.data.stats.declarations.properties["font-family"];
+          this.loading = false;
+        },
+      };
+
+      const App = {
+        components: {
+          "analysis-component": AnalysisComponent,
+        },
+        data() {
+          return {
+            urls: [],
+            rawUrl: "",
+          };
+        },
+        async mounted() {},
+        computed: {
+          isRawUrlValid() {
+            try {
+              new URL(this.rawUrl.trim());
+              return true;
+            } catch (err) {
+              return false;
+            }
+          },
+        },
+        methods: {
+          analyse() {
+            this.urls.push(this.rawUrl.trim());
+            this.rawUrl = "";
+          },
+        },
+      };
+
+      Vue.createApp(App).mount("#app");
+    </script>
+  </body>
+</html>
